@@ -10,6 +10,9 @@
                 display: inline-block;
                 margin-right: 10px;
             }
+            .empty {
+            	visibility: hidden;
+            }
             .ballR {
                 background: radial-gradient(circle at 40px 10px, #f88, #f00, #e00, #c00, #800, #000);
             }
@@ -74,58 +77,122 @@
         </style>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
         <script>
-            var shape = [
-                "......R......",
-                ".....RR......",
-                ".....RRR.....",
-                "....RRRR.....",
-                "WWWWXXXXXPPPP",
-                "WWWXXXXXXPPP.",
-                ".WWXXXXXXXPP.",
-                ".WXXXXXXXXP..",
-                "..XXXXXXXXX..",
-                ".GXXXXXXXXB..",
-                ".GGXXXXXXXBB.",
-                "GGGXXXXXXBBB.",
-                "GGGGXXXXXBBBB",
-                "....YYYY.....",
-                ".....YYY.....",
-                ".....YY......",
-                "......Y......",
-            ];
-            $(document).ready(function() {
-                for (var i = 0; i < shape.length; i ++) {
-                    var row = shape[i];
-                    for (var j = 0; j < row.length; j ++) {
-                        switch (row[j]) {
-                            case ".": $(".row").eq(i).find(".hole").eq(j).css("visibility", "hidden"); break;
-                            case "X": break;
-                            default: $(".row").eq(i).find(".hole").eq(j).addClass("ball" + row[j]);
-                        }
-                    }
-                }
-            });
+        
+        	var Settings = {
+        		tokens : {
+        			PLAYERS : "RPBYGW",
+        			EMPTY: "X",
+        			NULL: "."
+        		},
+        		server: "http://127.0.0.1/bots.php"
+        		
+        	}
+        	
+        	var Player = function ( name, id ) {
+        		this.name = name;
+        		this.id = id;
+        	}
+        	
+        	var PlayerListFactory = function () {
+        		var ret = [];
+        		for ( var i = 0; i < Settings.tokens.PLAYERS.length; ++i ) {
+        			ret.push( new Player ( Settings.tokens.PLAYERS[i], i ) );
+        		}
+        		return ret;
+        	}
+        	
+        	var Board = function( init) {
+        		for ( var i = 0 ; i < init.length; ++i ) {
+        			this[i] = [];
+        			for ( var j = 0; j < init[i].length; ++j ) {
+        				this[i][j] = init[i][j];
+        			}	
+        		}
+        		this.length = init.length;
+        	}
+        	
+        	function BoardFactory () {
+        		return new Board ( [
+						"......R......",
+						".....RR......",
+						".....RRR.....",
+						"....RRRR.....",
+						"WWWWXXXXXPPPP",
+						"WWWXXXXXXPPP.",
+						".WWXXXXXXXPP.",
+						".WXXXXXXXXP..",
+						"..XXXXXXXXX..",
+						".GXXXXXXXXB..",
+						".GGXXXXXXXBB.",
+						"GGGXXXXXXBBB.",
+						"GGGGXXXXXBBBB",
+						"....YYYY.....",
+						".....YYY.....",
+						".....YY......",
+						"......Y......",
+					]       		
+        		
+        		
+        		);
+        	}
+        	
+        	
+        	var State = function ( board, playerList ) {
+        		this.board = board;
+        		this.playerList = playerList;
+        		this.cur_player = 0;
+        	}
+        	
+        	var StateFactory = function () {
+        		return new State (
+        			BoardFactory(),
+        			PlayerListFactory()
+        		
+        		);
+        	
+        	}
+        	var Controller = function(){
+				
+				
+				this.state = StateFactory();        		
+        		this.render = function() {
+        			var html = "";
+        			for ( var i = 0 ; i < this.state.board.length; ++i ) {
+        				html += "<div class='row' >";
+        				for ( var j = 0; j < this.state.board[i].length; ++j ) {
+        				
+        						var cls = "hole ";
+							 	switch ( this.state.board[i][j] ) {
+									case ".": cls += "empty"; break;
+									case "X": break;
+									default: cls += "ball ball" + this.state.board[i][j] ;
+								}
+								html += "<div class='" + cls + "' ></div>";
+       				
+        				}
+        				html += "</div>";
+        				
+        				$(".main").html(html);
+        			}
+        		}
+        		
+        		this.init = function() {
+        			this.render();
+        		}
+        	
+        	}
+        	
+        	
+        	
+        	$("document").ready(function(){
+        		window.controller = new Controller();
+        		window.controller.init();
+        	});
+        
         </script>
     </head>
     <body>
         <div class="main">
-        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
-        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
-        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
-        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
-        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
-        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
-        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
-        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
-        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
-        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
-        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
-        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
-        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
-        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
-        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
-        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
-        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
         </div>
         <div class="triangle-1"></div>
         <div class="triangle-2"></div>
