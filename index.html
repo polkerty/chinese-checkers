@@ -1,0 +1,133 @@
+<!doctype HTML>
+<html>
+    <head>
+        <style>
+            .hole {
+                width: 50px;
+                height: 50px;
+                background: radial-gradient(circle at 10px 40px, #d2b48c, #bda27e, #937d62, #544838, #000);
+                border-radius: 50%;
+                display: inline-block;
+                margin-right: 10px;
+            }
+            .ballR {
+                background: radial-gradient(circle at 40px 10px, #f88, #f00, #e00, #c00, #800, #000);
+            }
+            .ballW {
+                background: radial-gradient(circle at 40px 10px, #fff, #eee, #ccc, #888, #000);
+            }
+            .ballP {
+                background: radial-gradient(circle at 40px 10px, #f8f, #f0f, #e0e, #c0c, #808, #000);
+            }
+            .ballG {
+                background: radial-gradient(circle at 40px 10px, #8f8, #0f0, #0e0, #0c0, #080, #000);
+            }
+            .ballB {
+                background: radial-gradient(circle at 40px 10px, #88f, #00f, #00e, #00c, #008, #000);
+            }
+            .ballY {
+                background: radial-gradient(circle at 40px 10px, #ff8, #ff0, #ee0, #cc0, #880, #000);
+            }
+            .row:nth-child(2n) {
+                margin-left: 30px;
+            }
+            .row:nth-child(2n) .hole:last-child {
+                display: none;
+            }
+            .main {
+                width: 780px;
+                margin-left: auto;
+                margin-right: auto;
+                position: relative;
+                z-index: 5;
+                margin-top: 50px;
+            }
+            .triangle-1 {
+                width: 0;
+                height: 0;
+                border-left: 428px solid transparent;
+                border-right: 428px solid transparent;
+                border-bottom: 785px solid #c69f35;
+                margin-left: auto;
+                margin-right: auto;
+                margin-top: -995px;
+                left: -5px;
+                position: relative;
+                z-index: 1;
+            }
+            .triangle-2 {
+                width: 0;
+                height: 0;
+                border-left: 428px solid transparent;
+                border-right: 428px solid transparent;
+                border-top: 785px solid #c69f35;
+                margin-left: auto;
+                margin-right: auto;
+                margin-top: -520px;
+                left: -5px;
+                position: relative;
+                z-index: 1;
+            }
+            body {
+                background-color: lightblue;
+            }
+        </style>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <script>
+            var shape = [
+                "......R......",
+                ".....RR......",
+                ".....RRR.....",
+                "....RRRR.....",
+                "WWWWXXXXXPPPP",
+                "WWWXXXXXXPPP.",
+                ".WWXXXXXXXPP.",
+                ".WXXXXXXXXP..",
+                "..XXXXXXXXX..",
+                ".GXXXXXXXXB..",
+                ".GGXXXXXXXBB.",
+                "GGGXXXXXXBBB.",
+                "GGGGXXXXXBBBB",
+                "....YYYY.....",
+                ".....YYY.....",
+                ".....YY......",
+                "......Y......",
+            ];
+            $(document).ready(function() {
+                for (var i = 0; i < shape.length; i ++) {
+                    var row = shape[i];
+                    for (var j = 0; j < row.length; j ++) {
+                        switch (row[j]) {
+                            case ".": $(".row").eq(i).find(".hole").eq(j).css("visibility", "hidden"); break;
+                            case "X": break;
+                            default: $(".row").eq(i).find(".hole").eq(j).addClass("ball" + row[j]);
+                        }
+                    }
+                }
+            });
+        </script>
+    </head>
+    <body>
+        <div class="main">
+        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
+        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
+        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
+        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
+        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
+        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
+        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
+        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
+        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
+        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
+        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
+        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
+        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
+        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
+        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
+        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
+        <div class="row"><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div><div class="hole"></div></div>
+        </div>
+        <div class="triangle-1"></div>
+        <div class="triangle-2"></div>
+    </body>
+</html>
