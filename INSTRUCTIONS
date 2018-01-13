@@ -1,0 +1,7 @@
+To use the bot, you'll need to compile it and set up a cgi server
+Compilation
+    run "g++ -std=c++11 bot.cpp -o bot" in the cgi-bin folder
+Server
+    run "python3 -m http.server --cgi 8005" in the chinese-checkers folder (requires Python 3)
+    This will start a server that you can call at http://localhost:8005/cgi-bin/bot that will respond to POST calls passing the data in the body
+    An example of this can be found at http://localhost:8005/call.html which will get the protocol.txt file and send it to the bot and give a feedback message with the result
