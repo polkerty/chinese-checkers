@@ -1,0 +1,17 @@
+<!doctype HTML>
+<html>
+    <head>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <script>
+            $.get("protocol.txt", {}, function(data) {
+                console.log(data);
+                $.post("cgi-bin/bot", data, function(data1) {
+                    alert(data1);
+                });
+            });
+        </script>
+    </head>
+    <body>
+        
+    </body>
+</html>
