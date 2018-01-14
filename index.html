@@ -436,7 +436,8 @@
         		}
         		
         		this.curBotUrl = function() {
-  					return  Settings.bots[ this.state.cur_player ];
+  					var bot = $(".botChoice").eq(this.state.cur_player).find("select").val();
+  					return bots[bot];
         		}
         		
         		this.advancePlayer = function() {
@@ -499,6 +500,7 @@
             		});
             		$("#onoff").click(function(){
             			controller.on = !controller.on;
+            			controller.run();
             		});
             		window.controller = new Controller();
             		window.controller.init();

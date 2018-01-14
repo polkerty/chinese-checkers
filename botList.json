@@ -1,3 +1,4 @@
 {
-    "RandomBot": "http://localhost:8005/cgi-bin/bot"
+    "Random Bot": "cgi-bin/bot",
+    "Basic Bot": "cgi-bin/distBot"
 }
