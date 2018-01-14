@@ -81,10 +81,19 @@
         	var Settings = {
         		tokens : {
         			PLAYERS : "RPBYGW",
+        			OPPONENTS: "YGWRPB",
         			EMPTY: "X",
         			NULL: "."
         		},
-        		server: "http://127.0.0.1/bots.php"
+        		bots: [
+        			"http://127.0.0.1:8005/cgi-bin/bot",
+        			"http://127.0.0.1:8005/cgi-bin/bot",
+        			"http://127.0.0.1:8005/cgi-bin/bot",
+        			"http://127.0.0.1:8005/cgi-bin/bot",
+        			"http://127.0.0.1:8005/cgi-bin/bot",
+        			"http://127.0.0.1:8005/cgi-bin/bot"
+        		],
+        		waitBetweenTurns : 1000
         		
         	}
         	
@@ -111,6 +120,165 @@
         		this.length = init.length;
         	}
         	
+        	Board.prototype.toArray = function() {
+        		var arr = [];
+        		for ( var i = 0; i < this.length; ++i ) {
+        			var row = [];
+        			for ( var j = 0 ; j < this[i].length; ++j ) {
+        				row.push(this[i][j]);
+        			}
+        			arr.push(row);
+        		}
+        		return arr;
+        	}
+        	
+        	Board.prototype.toString = function() {
+        		var str = "";
+        		for ( var i = 0; i < this.length; ++i ) {
+        			for ( var j = 0; j < this[i].length; ++j ) {
+        				str += this[i][j];
+        			}
+        			if ( i < this.length - 1 ) {
+        				str += "\n";
+        			}
+        		}
+        		return str;
+        	}
+        	
+        	
+        	Board.prototype.isOpen = function( i, j ) {
+        		return i >= 0 && i < this.length && j >= 0 && j < this.length && this[i][j] == Settings.tokens.EMPTY;
+        	}
+
+        	Board.prototype.isFull = function( i, j ) {
+        		return i >= 0 && i < this.length && j >= 0 && j < this.length && 
+        			(this[i][j] !== Settings.tokens.EMPTY && this[i][j] !== Settings.tokens.NULL);
+        	}
+        	
+        	Board.prototype.getAdjacent = function( i, j, filter ) {
+        		filter = filter ? filter.bind(this) : this.isOpen.bind(this);
+ 				return (
+ 					i % 2 == 0
+        			?	[
+							[ i - 1, j - 1 ],
+							[ i - 1, j],
+							[ i, j + 1],
+							[ i + 1, j],
+							[ i + 1, j - 1 ],
+							[ i, j - 1]
+						]
+					: 	[
+							[ i - 1, j ],
+							[ i - 1, j + 1 ],
+							[ i, j + 1],
+							[ i + 1, j + 1],
+							[ i + 1, j ],
+							[ i, j - 1 ]
+						]
+					).filter(function(move){
+						return filter( move[0], move[1] );
+					});  		
+        	}
+        	
+        	Board.prototype.getJump = function ( start, middle ) {
+        		var increments = [
+					{
+						"0,1" : [ 0, 2 ],
+						"1,0" : [ 2, 1 ],
+						"1,-1" : [ 2, -1 ],
+						"0,-1" : [ 0, -2 ],
+						"-1,-1" : [ -2, -1 ],
+						"-1,0" : [-2, 0 ]
+					},
+					{
+						"0,1" : [0, 2 ],
+						"1,1" : [ 2, 1 ],
+						"1,0" : [ 2, -1 ],
+						"0,-1" : [ 0, -2 ],
+						"-1,0" : [ -2, -1 ],
+						"-1,1" : [-2, 1 ]
+					}
+        		
+        		]
+        		
+        		var increment = increments[start[0] % 2][middle.toString()];
+        		return [
+        			start[0] + increment[0],
+        			start[1] + increment[1]
+        		]
+        	}
+        	
+        	// BFS
+        	Board.prototype.getJumps = function ( row, col ) {
+        		
+        		var jumps = [];
+        		var bfs = [ [row, col] ];
+        		var used = this.toArray();
+        		var USED_TOKEN = "#";
+         		
+        		while ( bfs.length ) {
+        			var bfs_temp = [];
+        			
+        			for ( var i = 0; i < bfs.length; ++i ) {
+ 						
+ 						var _row = bfs[i][0], _col = bfs[i][1];
+ 						if ( used[_row][_col] === USED_TOKEN ) continue;
+ 						if ( !(row == _row && col == _col ) ) jumps.push ( [ _row, _col ] );
+ 						used[_row][_col] = USED_TOKEN;
+ 						
+						var singles = this.getAdjacent( _row, _col, this.isFull );
+			
+						for ( var j = 0; j < singles.length; ++j ) {
+							var row_delt = singles[j][0] - _row,
+								col_delt = singles[j][1] - _col;
+							var cand = this.getJump ( bfs[i], [ row_delt, col_delt ] );
+							if ( this.isOpen( cand[0], cand[1] ) ) {
+								bfs_temp.push( cand );
+							}
+						}
+					
+					}
+ 
+        			
+        			bfs = bfs_temp;
+        		}
+        		
+        		return jumps;
+        	};
+        	
+        	Board.prototype.getMoves = function ( row, col ) {
+        		if ( this.isOpen( row, col ) ) return [];
+        		
+        		var singles = this.getAdjacent ( row, col );
+        		var ret = singles.concat ( this.getJumps ( row, col ));
+        		
+        		ret = ret.map ( function( dest ) {
+        			return [ row, col ].concat(dest);
+        		});
+        		
+        		return ret;
+        	}
+        	
+        	Board.prototype.getPlayerMoves = function ( player ) {
+        		var ret = [];
+        		
+        		for ( var i = 0; i < this.length; ++i ) {
+        			for ( var j =0; j < this[i].length; ++j ) {
+        				if ( this[i][j] !== player ) continue;
+        				ret = ret.concat ( this.getMoves( i, j ) );
+        			}
+        		}
+        		
+        		return ret;
+        	}
+        	
+        	Board.prototype.move = function ( fromRow, fromCol, toRow, toCol ) {
+        		this[toRow][toCol] = this[fromRow][fromCol];
+        		this[fromRow][fromCol] = Settings.tokens.EMPTY;
+        	}
+        	
+        	
+        	
         	function BoardFactory () {
         		return new Board ( [
 						"......R......",
@@ -133,12 +301,14 @@
 					]       		
         		
         		
-        		);
+        		);        		
+        		
         	}
         	
         	
         	var State = function ( board, playerList ) {
         		this.board = board;
+        		this.original = board.toArray();
         		this.playerList = playerList;
         		this.cur_player = 0;
         	}
@@ -153,7 +323,9 @@
         	}
         	var Controller = function(){
 				
+				var _ = this;
 				
+				this.on = false;
 				this.state = StateFactory();        		
         		this.render = function() {
         			var html = "";
@@ -167,6 +339,7 @@
 									case "X": break;
 									default: cls += "ball ball" + this.state.board[i][j] ;
 								}
+//								html += "<div class='" + cls + "' >" + i + "," + j + "</div>";
 								html += "<div class='" + cls + "' ></div>";
        				
         				}
@@ -176,8 +349,99 @@
         			}
         		}
         		
+        		this.hasWon = function( player ) {
+        			var matches = 0;
+        			var goal = Settings.tokens.OPPONENTS[player];
+        			var me =  Settings.tokens.PLAYERS[player];
+        			for ( var i = 0; i < this.state.board.length; ++i ) {
+        				for ( var j = 0; j < this.state.board[i].length; ++j ) {
+        					if ( this.state.board[i][j] == me && this.state.original[i][j] == goal ) {
+        						++matches;
+        					}
+        				}
+        			}
+        			return matches == Settings.startNum;
+        		};
+        		
+        		this.celebrate = function () {
+        			this.on = false;
+        			this.run = function(){};
+        			alert( "Player " + this.playerToken() + " has won the game!" );
+        		}
+        		
+        		this.playerToken = function() {
+        			return Settings.tokens.PLAYERS[ this.state.cur_player ];
+        		}
+        		
+        		this.getValidMoves = function() {
+        			var moves = this.state.board
+        					.getPlayerMoves ( this.playerToken() );
+					return moves;       		
+        		}
+        		
+        		this.performMove = function(move) {
+        			this.state.board.move( move[0], move[1], move[2], move[3] );
+        		}
+        		
+        		this.interpretBotOutput = function( output ) {
+        			var valid_moves = this.getValidMoves();
+        			var moveNum = parseInt( output );
+        			if ( isNaN(moveNum) || !valid_moves[moveNum] ) {
+        				return false;
+        			} else {
+        				this.performMove ( valid_moves[moveNum] );
+        				return true;
+        			}
+        		}
+        		
+        		this.constructBotProtocol = function() {
+        			var moves = this.getValidMoves();
+        			
+        			var moves_count = moves.length;
+        			var moves_str = moves
+        					.map(function(move){ return move.join(" "); })
+        					.join("\n");
+        			var board = this.state.board.toString();
+        			var ret = "PLAYER\n" + this.playerToken() + "\n";
+        			ret += "BOARD\n" + board + "\n";
+        			ret += "MOVES " + moves_count + "\n" + moves_str + "\n";
+        			return ret;
+        			
+        		}
+        		
+        		this.curBotUrl = function() {
+  					return  Settings.bots[ this.state.cur_player ];      		
+        		}
+        		
+        		this.advancePlayer = function() {
+        			this.state.cur_player = ( this.state.cur_player + 1 ) % this.state.playerList.length;
+        		}
+        		
+        		
+        		this.run = function() {
+        			if ( !this.on ) {
+        				setTimeout( _.run, Settings.waitBetweenTurns );
+        				return;
+        			}
+        			var bot_url = this.curBotUrl();
+        			var info = this.constructBotProtocol();
+					$.post(bot_url, info, function(result) {
+						if ( _.interpretBotOutput( result ) ) {
+							if ( !_.hasWon( _.state.cur_player ) ) {
+								_.advancePlayer();
+							} else {
+								_.celebrate();
+							}
+						}
+						_.render();
+						setTimeout( _.run.bind(_), Settings.waitBetweenTurns );
+					});        			
+        		};
+        		
         		this.init = function() {
         			this.render();
+        			this.on = true;
+        			this.run();
         		}
         	
         	}
@@ -185,6 +449,13 @@
         	
         	
         	$("document").ready(function(){
+        	
+        		$("#speed").change(function(){
+        			Settings.waitBetweenTurns = parseInt(this.value);
+        		});
+        		$("#onoff").click(function(){
+        			controller.on = !controller.on;
+        		});
         		window.controller = new Controller();
         		window.controller.init();
         	});
@@ -196,5 +467,9 @@
         </div>
         <div class="triangle-1"></div>
         <div class="triangle-2"></div>
+        <div id="controls" >
+        	<select id="speed" ><option value="10000" >Slow speed</option><option value="1000" selected >Normal speed</option><option value="0" >Fast speed</option></select>
+        	<button id="onoff" >Turn on/off</button>
+        </div>
     </body>
 </html>
