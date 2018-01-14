@@ -74,10 +74,32 @@
             body {
                 background-color: lightblue;
             }
+            #controls {
+                background: white;
+                display: inline-block;
+                position: absolute;
+                top: 10px;
+                padding: 20px;
+            }
+            
+            .botChoice {
+                margin: 10px;
+            }
+            
+            .botChoice > span {
+                width: 80px;
+                display: inline-block;
+            }
+            
+            #onoff {
+                margin-top: 10px;
+            }
         </style>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
         <script>
-        
+            var bots = {};
         	var Settings = {
         		tokens : {
         			PLAYERS : "RPBYGW",
@@ -86,12 +108,12 @@
         			NULL: "."
         		},
         		bots: [
-        			"http://127.0.0.1:8005/cgi-bin/bot",
-        			"http://127.0.0.1:8005/cgi-bin/bot",
-        			"http://127.0.0.1:8005/cgi-bin/bot",
-        			"http://127.0.0.1:8005/cgi-bin/bot",
-        			"http://127.0.0.1:8005/cgi-bin/bot",
-        			"http://127.0.0.1:8005/cgi-bin/bot"
+        			"/cgi-bin/bot",
+        			"/cgi-bin/bot",
+        			"/cgi-bin/bot",
+        			"/cgi-bin/bot",
+        			"/cgi-bin/bot",
+        			"/cgi-bin/bot"
         		],
         		waitBetweenTurns : 1000,
         		startNum : 10
@@ -116,7 +138,7 @@
         			this[i] = [];
         			for ( var j = 0; j < init[i].length; ++j ) {
         				this[i][j] = init[i][j];
-        			}	
+        			}
         		}
         		this.length = init.length;
         	}
@@ -152,7 +174,7 @@
         	}
 
         	Board.prototype.isFull = function( i, j ) {
-        		return i >= 0 && i < this.length && j >= 0 && j < this.length && 
+        		return i >= 0 && i < this.length && j >= 0 && j < this.length &&
         			(this[i][j] !== Settings.tokens.EMPTY && this[i][j] !== Settings.tokens.NULL);
         	}
         	
@@ -178,7 +200,7 @@
 						]
 					).filter(function(move){
 						return filter( move[0], move[1] );
-					});  		
+					});
         	}
         	
         	Board.prototype.getJump = function ( start, middle ) {
@@ -299,10 +321,10 @@
 						".....YYY.....",
 						".....YY......",
 						"......Y......",
-					]       		
+					]
         		
         		
-        		);        		
+        		);
         		
         	}
         	
@@ -327,7 +349,7 @@
 				var _ = this;
 				
 				this.on = false;
-				this.state = StateFactory();        		
+				this.state = StateFactory();
         		this.render = function() {
         			var html = "";
         			for ( var i = 0 ; i < this.state.board.length; ++i ) {
@@ -378,7 +400,7 @@
         		this.getValidMoves = function() {
         			var moves = this.state.board
         					.getPlayerMoves ( this.playerToken() );
-					return moves;       		
+					return moves;
         		}
         		
         		this.performMove = function(move) {
@@ -414,7 +436,8 @@
         		}
         		
         		this.curBotUrl = function() {
-  					return  Settings.bots[ this.state.cur_player ];      		
+  					var bot = $(".botChoice").eq(this.state.cur_player).find("select").val();
+  					return bots[bot];
         		}
         		
         		this.advancePlayer = function() {
@@ -444,29 +467,44 @@
 						}
 						_.render();
 						setTimeout( _.run.bind(_), Settings.waitBetweenTurns );
-					});        			
+					});
         		};
         		
         		this.init = function() {
         			this.render();
-        			this.on = true;
-        			this.run();
+        			this.on = false;
         		}
         	
         	}
         	
-        	
+        	function setupSettings() {
+        	    var colors = Settings.tokens.PLAYERS;
+        	    for (var i = 0; i < 6; i ++) {
+        	        botText = "<div class='botChoice'><span>Bot " + i + " (" + colors[i] + ")</span><select>";
+        	        for (var bot in bots) {
+        	            botText += "<option value='" + bot + "'>" + bot + "</option>";
+        	        }
+        	        botText += "</select></div>";
+        	        $("#BotChoices").append(botText);
+        	    }
+        	    $("select").selectmenu();
+        	    $("button").button();
+        	}
         	
         	$("document").ready(function(){
-        	
-        		$("#speed").change(function(){
-        			Settings.waitBetweenTurns = parseInt(this.value);
-        		});
-        		$("#onoff").click(function(){
-        			controller.on = !controller.on;
-        		});
-        		window.controller = new Controller();
-        		window.controller.init();
+        	    $.get("botList.json", {}, function(data) {
+        	        bots = data;
+        	        setupSettings();
+        	        $("#speed").change(function(){
+            			Settings.waitBetweenTurns = parseInt(this.value);
+            		});
+            		$("#onoff").click(function(){
+            			controller.on = !controller.on;
+            			controller.run();
+            		});
+            		window.controller = new Controller();
+            		window.controller.init();
+        	    });
         	});
         
         </script>
@@ -476,8 +514,15 @@
         </div>
         <div class="triangle-1"></div>
         <div class="triangle-2"></div>
-        <div id="controls" >
-        	<select id="speed" ><option value="3000" >Slow speed</option><option value="1000" selected >Normal speed</option><option value="0" >Fast speed</option></select>
+        <div id="controls">
+            <div id="BotChoices"></div>
+            <div>
+            	<select id="speed">
+            	    <option value="3000">Slow speed</option>
+            	    <option value="1000" selected>Normal speed</option>
+            	    <option value="0">Fast speed</option>
+            	</select>
+        	</div>
         	<button id="onoff" >Turn on/off</button>
         </div>
     </body>
