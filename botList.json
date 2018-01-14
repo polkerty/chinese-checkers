@@ -1,4 +1,3 @@
 {
-    "RandomBot": "http://localhost:8005/cgi-bin/bot",
-    "NathanBot": "..."
+    "RandomBot": "http://localhost:8005/cgi-bin/bot"
 }
