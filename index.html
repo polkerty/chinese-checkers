@@ -457,7 +457,8 @@
         			if ( !has_move ) {
         				_.advancePlayer();
          				this.timer = setTimeout( _.run, Settings.waitBetweenTurns );
-       			}
+         				return;
+       				}	
         			var bot_url = this.curBotUrl();
         			var info = this.constructBotProtocol();
 					$.post(bot_url, info, function(result) {
