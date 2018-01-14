@@ -309,7 +309,7 @@
         	
         	var State = function ( board, playerList ) {
         		this.board = board;
-        		this.original = board.toArray();
+        		this.original = new Board(board.toString());
         		this.playerList = playerList;
         		this.cur_player = 0;
         	}
@@ -403,7 +403,9 @@
         					.map(function(move){ return move.join(" "); })
         					.join("\n");
         			var board = this.state.board.toString();
+        			var original = this.state.original.toString();
         			var ret = "PLAYER\n" + this.playerToken() + "\n";
+        			ret += "ORIGINAL\n" + original + "\n";
         			ret += "BOARD\n" + board + "\n";
         			ret += "MOVES " + moves_count + "\n" + moves_str + "\n";
         			return ret;
