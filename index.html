@@ -331,7 +331,7 @@
         	
         	var State = function ( board, playerList ) {
         		this.board = board;
-        		this.original = board.toArray();
+        		this.original = new Board(board.toArray());
         		this.playerList = playerList;
         		this.cur_player = 0;
         	}
@@ -362,7 +362,7 @@
 									case "X": break;
 									default: cls += "ball ball" + this.state.board[i][j] ;
 								}
-//								html += "<div class='" + cls + "' >" + i + "," + j + "</div>";
+// 								html += "<div class='" + cls + "' >" + i + "," + j + "</div>";
 								html += "<div class='" + cls + "' ></div>";
        				
         				}
@@ -389,7 +389,8 @@
         		this.celebrate = function () {
         			this.on = false;
         			this.run = function(){};
-        			alert( "Player " + this.playerToken() + " has won the game!" );
+        			this.render();
+        			setTimeout('alert( "Player ' + this.playerToken() + ' has won the game!" )', 1000);
         		}
         		
         		this.playerToken = function() {
@@ -425,7 +426,9 @@
         					.map(function(move){ return move.join(" "); })
         					.join("\n");
         			var board = this.state.board.toString();
+        			var original = this.state.original.toString();
         			var ret = "PLAYER\n" + this.playerToken() + "\n";
+        			ret += "ORIGINAL\n" + original + "\n";
         			ret += "BOARD\n" + board + "\n";
         			ret += "MOVES " + moves_count + "\n" + moves_str + "\n";
         			return ret;
@@ -446,6 +449,11 @@
         				setTimeout( _.run, Settings.waitBetweenTurns );
         				return;
         			}
+        			var has_move = !!this.getValidMoves().length;
+        			if ( !has_move ) {
+        				_.advancePlayer();
+         				setTimeout( _.run, Settings.waitBetweenTurns );
+       			}
         			var bot_url = this.curBotUrl();
         			var info = this.constructBotProtocol();
 					$.post(bot_url, info, function(result) {
@@ -508,7 +516,7 @@
             <div id="BotChoices"></div>
             <div>
             	<select id="speed">
-            	    <option value="10000">Slow speed</option>
+            	    <option value="3000">Slow speed</option>
             	    <option value="1000" selected>Normal speed</option>
             	    <option value="0">Fast speed</option>
             	</select>

@@ -4,6 +4,7 @@
 using namespace std;
 
 char player;
+char original[17][13];
 char board[17][13];
 int numMoves;
 int moves[200][4];
@@ -16,6 +17,12 @@ int main() {
     string word;
     cin >> word; // PLAYER
     cin >> player;
+    cin >> word; // ORIGINAL
+    for (int i = 0; i < 17; i ++) {
+        for (int j = 0; j < 13; j ++) {
+            cin >> original[i][j];
+        }
+    }
     cin >> word; // BOARD
     for (int i = 0; i < 17; i ++) {
         for (int j = 0; j < 13; j ++) {
