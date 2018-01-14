@@ -348,6 +348,7 @@
 				
 				var _ = this;
 				
+				this.timer = null;
 				this.on = false;
 				this.state = StateFactory();
         		this.render = function() {
@@ -446,14 +447,16 @@
         		
         		
         		this.run = function() {
+        		
+        			if ( this.timer ) clearTimeout( this.timer );
         			if ( !this.on ) {
-        				setTimeout( _.run, Settings.waitBetweenTurns );
+        				this.timer = setTimeout( _.run, Settings.waitBetweenTurns );
         				return;
         			}
         			var has_move = !!this.getValidMoves().length;
         			if ( !has_move ) {
         				_.advancePlayer();
-         				setTimeout( _.run, Settings.waitBetweenTurns );
+         				this.timer = setTimeout( _.run, Settings.waitBetweenTurns );
        			}
         			var bot_url = this.curBotUrl();
         			var info = this.constructBotProtocol();
@@ -466,7 +469,7 @@
 							}
 						}
 						_.render();
-						setTimeout( _.run.bind(_), Settings.waitBetweenTurns );
+						this.timer = setTimeout( _.run.bind(_), Settings.waitBetweenTurns );
 					});
         		};
         		
@@ -479,7 +482,7 @@
         	
         	function setupSettings() {
         	    var colors = Settings.tokens.PLAYERS;
-        	    for (var i = 0; i < 6; i ++) {
+        	    for (var i = 0; i < colors.length; i ++) {
         	        botText = "<div class='botChoice'><span>Bot " + i + " (" + colors[i] + ")</span><select>";
         	        for (var bot in bots) {
         	            botText += "<option value='" + bot + "'>" + bot + "</option>";
@@ -495,7 +498,7 @@
         	    $.get("botList.json", {}, function(data) {
         	        bots = data;
         	        setupSettings();
-        	        $("#speed").change(function(){
+        	        $(document).on("selectmenuchange", "#speed", function(){
             			Settings.waitBetweenTurns = parseInt(this.value);
             		});
             		$("#onoff").click(function(){
