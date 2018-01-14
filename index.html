@@ -309,7 +309,7 @@
         	
         	var State = function ( board, playerList ) {
         		this.board = board;
-        		this.original = new Board(board.toString());
+        		this.original = new Board(board.toArray());
         		this.playerList = playerList;
         		this.cur_player = 0;
         	}
@@ -340,7 +340,7 @@
 									case "X": break;
 									default: cls += "ball ball" + this.state.board[i][j] ;
 								}
-//								html += "<div class='" + cls + "' >" + i + "," + j + "</div>";
+// 								html += "<div class='" + cls + "' >" + i + "," + j + "</div>";
 								html += "<div class='" + cls + "' ></div>";
        				
         				}
@@ -367,7 +367,8 @@
         		this.celebrate = function () {
         			this.on = false;
         			this.run = function(){};
-        			alert( "Player " + this.playerToken() + " has won the game!" );
+        			this.render();
+        			setTimeout('alert( "Player ' + this.playerToken() + ' has won the game!" )', 1000);
         		}
         		
         		this.playerToken = function() {
@@ -426,6 +427,11 @@
         				setTimeout( _.run, Settings.waitBetweenTurns );
         				return;
         			}
+        			var has_move = !!this.getValidMoves().length;
+        			if ( !has_move ) {
+        				_.advancePlayer();
+         				setTimeout( _.run, Settings.waitBetweenTurns );
+       			}
         			var bot_url = this.curBotUrl();
         			var info = this.constructBotProtocol();
 					$.post(bot_url, info, function(result) {
