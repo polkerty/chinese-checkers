@@ -1,4 +1,6 @@
 {
     "Basic Bot": "cgi-bin/distBot",
-    "Random Bot": "cgi-bin/bot"
+    "Projection Bot" : "cgi-bin/projBot",
+    "Random Bot": "cgi-bin/bot",
+    "Human Bot": "HUMAN"
 }
