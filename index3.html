@@ -1,0 +1,688 @@
+<!doctype HTML>
+<html>
+    <head>
+        <style>
+            .hole {
+                width: 50px;
+                height: 50px;
+                background: radial-gradient(circle at 10px 40px, #d2b48c, #bda27e, #937d62, #544838, #000);
+                border-radius: 50%;
+                display: inline-block;
+                margin-right: 10px;
+            }
+            .empty {
+            	visibility: hidden;
+            }
+            .ball.live {
+            	opacity:0.5;
+            }
+            .ballR {
+                background: radial-gradient(circle at 40px 10px, #f88, #f00, #e00, #c00, #800, #000);
+            }
+            .ballW {
+                background: radial-gradient(circle at 40px 10px, #fff, #eee, #ccc, #888, #000);
+            }
+            .ballP {
+                background: radial-gradient(circle at 40px 10px, #f8f, #f0f, #e0e, #c0c, #808, #000);
+            }
+            .ballG {
+                background: radial-gradient(circle at 40px 10px, #8f8, #0f0, #0e0, #0c0, #080, #000);
+            }
+            .ballB {
+                background: radial-gradient(circle at 40px 10px, #88f, #00f, #00e, #00c, #008, #000);
+            }
+            .ballY {
+                background: radial-gradient(circle at 40px 10px, #ff8, #ff0, #ee0, #cc0, #880, #000);
+            }
+            .row:nth-child(2n) {
+                margin-left: 30px;
+            }
+            .row:nth-child(2n) .hole:last-child {
+                display: none;
+            }
+            .main {
+                width: 780px;
+                margin-left: auto;
+                margin-right: auto;
+                position: relative;
+                z-index: 5;
+                margin-top: 50px;
+            }
+            .triangle-1 {
+                width: 0;
+                height: 0;
+                border-left: 428px solid transparent;
+                border-right: 428px solid transparent;
+                border-bottom: 785px solid #c69f35;
+                margin-left: auto;
+                margin-right: auto;
+                margin-top: -995px;
+                left: -5px;
+                position: relative;
+                z-index: 1;
+            }
+            .triangle-2 {
+                width: 0;
+                height: 0;
+                border-left: 428px solid transparent;
+                border-right: 428px solid transparent;
+                border-top: 785px solid #c69f35;
+                margin-left: auto;
+                margin-right: auto;
+                margin-top: -520px;
+                left: -5px;
+                position: relative;
+                z-index: 1;
+            }
+            body {
+                background-color: lightblue;
+            }
+            #controls {
+                background: white;
+                display: inline-block;
+                position: absolute;
+                top: 10px;
+                padding: 20px;
+            }
+            
+            .botChoice {
+                margin: 10px;
+            }
+            
+            .botChoice > span {
+                width: 80px;
+                display: inline-block;
+            }
+            
+            #onoff {
+                margin-top: 10px;
+            }
+            
+            .dim {
+            	opacity:0.5;
+            }
+        </style>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+        <script>
+            var bots = {};
+        	var Settings = {
+        		tokens : {
+        			PLAYERS : "RPBYGW",
+        			OPPONENTS: "YGWRPB",
+        			EMPTY: "X",
+        			NULL: "."
+        		},
+        		bots: [
+        			"/cgi-bin/bot",
+        			"/cgi-bin/bot",
+        			"/cgi-bin/bot",
+        			"/cgi-bin/bot",
+        			"/cgi-bin/bot",
+        			"/cgi-bin/bot"
+        		],
+        		isHuman : "HUMAN",
+        		waitBetweenTurns : 1000,
+        		startNum : 10
+        		
+        	}
+        	
+        	var Player = function ( name, id ) {
+        		this.name = name;
+        		this.id = id;
+        		this.place = -1;
+        	}
+        	
+        	var PlayerListFactory = function () {
+        		var ret = [];
+        		for ( var i = 0; i < Settings.tokens.PLAYERS.length; ++i ) {
+        			ret.push( new Player ( Settings.tokens.PLAYERS[i], i ) );
+        		}
+        		return ret;
+        	}
+        	
+        	var Board = function( init) {
+        		for ( var i = 0 ; i < init.length; ++i ) {
+        			this[i] = [];
+        			for ( var j = 0; j < init[i].length; ++j ) {
+        				this[i][j] = init[i][j];
+        			}
+        		}
+        		this.length = init.length;
+        	}
+        	
+        	Board.prototype.toArray = function() {
+        		var arr = [];
+        		for ( var i = 0; i < this.length; ++i ) {
+        			var row = [];
+        			for ( var j = 0 ; j < this[i].length; ++j ) {
+        				row.push(this[i][j]);
+        			}
+        			arr.push(row);
+        		}
+        		return arr;
+        	}
+        	
+        	Board.prototype.toString = function() {
+        		var str = "";
+        		for ( var i = 0; i < this.length; ++i ) {
+        			for ( var j = 0; j < this[i].length; ++j ) {
+        				str += this[i][j];
+        			}
+        			if ( i < this.length - 1 ) {
+        				str += "\n";
+        			}
+        		}
+        		return str;
+        	}
+        	
+        	
+        	Board.prototype.isOpen = function( i, j ) {
+        		return i >= 0 && i < this.length && j >= 0 && j < this[i].length && this[i][j] == Settings.tokens.EMPTY;
+        	}
+
+        	Board.prototype.isFull = function( i, j ) {
+        		return i >= 0 && i < this.length && j >= 0 && j < this[i].length &&
+        			(this[i][j] !== Settings.tokens.EMPTY && this[i][j] !== Settings.tokens.NULL);
+        	}
+        	
+        	Board.prototype.getAdjacent = function( i, j, filter ) {
+        		filter = filter ? filter.bind(this) : this.isOpen.bind(this);
+ 				return (
+ 					i % 2 == 0
+        			?	[
+							[ i - 1, j - 1 ],
+							[ i - 1, j],
+							[ i, j + 1],
+							[ i + 1, j],
+							[ i + 1, j - 1 ],
+							[ i, j - 1]
+						]
+					: 	[
+							[ i - 1, j ],
+							[ i - 1, j + 1 ],
+							[ i, j + 1],
+							[ i + 1, j + 1],
+							[ i + 1, j ],
+							[ i, j - 1 ]
+						]
+					).filter(function(move){
+						return filter( move[0], move[1] );
+					});
+        	}
+        	
+        	Board.prototype.getJump = function ( start, middle ) {
+        		var increments = [
+					{
+						"0,1" : [ 0, 2 ],
+						"1,0" : [ 2, 1 ],
+						"1,-1" : [ 2, -1 ],
+						"0,-1" : [ 0, -2 ],
+						"-1,-1" : [ -2, -1 ],
+						"-1,0" : [-2, 1 ]
+					},
+					{
+						"0,1" : [0, 2 ],
+						"1,1" : [ 2, 1 ],
+						"1,0" : [ 2, -1 ],
+						"0,-1" : [ 0, -2 ],
+						"-1,0" : [ -2, -1 ],
+						"-1,1" : [-2, 1 ]
+					}
+        		
+        		]
+        		
+        		var increment = increments[start[0] % 2][middle.toString()];
+        		return [
+        			start[0] + increment[0],
+        			start[1] + increment[1]
+        		]
+        	}
+        	
+        	// BFS
+        	Board.prototype.getJumps = function ( row, col ) {
+        		
+        		var jumps = [];
+        		var bfs = [ [row, col] ];
+        		var used = this.toArray();
+        		var USED_TOKEN = "#";
+         		
+        		while ( bfs.length ) {
+        			var bfs_temp = [];
+        			
+        			for ( var i = 0; i < bfs.length; ++i ) {
+ 						
+ 						var _row = bfs[i][0], _col = bfs[i][1];
+ 						if ( used[_row][_col] === USED_TOKEN ) continue;
+ 						if ( !(row == _row && col == _col ) ) jumps.push ( [ _row, _col ] );
+ 						used[_row][_col] = USED_TOKEN;
+ 						
+						var singles = this.getAdjacent( _row, _col, this.isFull );
+			
+						for ( var j = 0; j < singles.length; ++j ) {
+							var row_delt = singles[j][0] - _row,
+								col_delt = singles[j][1] - _col;
+							var cand = this.getJump ( bfs[i], [ row_delt, col_delt ] );
+							if ( this.isOpen( cand[0], cand[1] ) ) {
+								bfs_temp.push( cand );
+							}
+						}
+					
+					}
+ 
+        			
+        			bfs = bfs_temp;
+        		}
+        		
+        		return jumps;
+        	};
+        	
+        	Board.prototype.getMoves = function ( row, col ) {
+        		if ( this.isOpen( row, col ) ) return [];
+        		
+        		var singles = this.getAdjacent ( row, col );
+        		var ret = singles.concat ( this.getJumps ( row, col ));
+        		
+        		ret = ret.map ( function( dest ) {
+        			return [ row, col ].concat(dest);
+        		});
+        		
+        		return ret;
+        	}
+        	
+        	Board.prototype.getPlayerMoves = function ( player ) {
+        		var ret = [];
+        		
+        		for ( var i = 0; i < this.length; ++i ) {
+        			for ( var j =0; j < this[i].length; ++j ) {
+        				if ( this[i][j] !== player ) continue;
+        				ret = ret.concat ( this.getMoves( i, j ) );
+        			}
+        		}
+        		
+        		return ret;
+        	}
+        	
+        	Board.prototype.move = function ( fromRow, fromCol, toRow, toCol ) {
+        		this[toRow][toCol] = this[fromRow][fromCol];
+        		this[fromRow][fromCol] = Settings.tokens.EMPTY;
+        	}
+        	
+        	
+        	
+        	function BoardFactory () {
+        		return new Board ( [
+						"......R......",
+						".....RR......",
+						".....RRR.....",
+						"....RRRR.....",
+						"WWWWXXXXXPPPP",
+						"WWWXXXXXXPPP.",
+						".WWXXXXXXXPP.",
+						".WXXXXXXXXP..",
+						"..XXXXXXXXX..",
+						".GXXXXXXXXB..",
+						".GGXXXXXXXBB.",
+						"GGGXXXXXXBBB.",
+						"GGGGXXXXXBBBB",
+						"....YYYY.....",
+						".....YYY.....",
+						".....YY......",
+						"......Y......",
+					]
+        		
+        		
+        		);
+        		
+        	}
+        	
+        	
+        	var State = function ( board, playerList ) {
+        		this.board = board;
+        		this.original = new Board(board.toArray());
+        		this.playerList = playerList;
+        		this.cur_player = 0;
+        	}
+        	
+        	var StateFactory = function () {
+        		return new State (
+        			BoardFactory(),
+        			PlayerListFactory()
+        		
+        		);
+        	
+        	}
+        	var Controller = function(){
+				
+				var _ = this;
+				
+				
+				this.description = {
+					states: [],
+					win_order: [],
+					out: function(){
+						console.log(
+							_.description.win_order.toString() +"\n" +
+							_.description.states.join("\n")
+						);
+					}
+				}
+				this.timer = null;
+				this.on = false;
+				this.state = StateFactory();
+        		this.render = function( ) {
+        			var html = "";
+        			for ( var i = 0 ; i < this.state.board.length; ++i ) {
+        				html += "<div class='row' >";
+        				for ( var j = 0; j < this.state.board[i].length; ++j ) {
+        				
+        						var cls = "hole ";
+							 	switch ( this.state.board[i][j] ) {
+									case ".": cls += "empty"; break;
+									case "X": cls += "needs"; break;
+									default: 
+										cls += "ball ball" + this.state.board[i][j] ;
+										if ( this.humanActive && this.humanFromPoint && this.humanFromPoint[0] == i && this.humanFromPoint[1] == j )
+											cls += " live";
+										
+								}
+// 								html += "<div class='" + cls + "' data-row='"+i+"' data-col='"+j+"' >" + i + "," + j + "</div>";
+								html += "<div class='" + cls + "' data-row='"+i+"' data-col='"+j+"' ></div>";
+       				
+        				}
+        				html += "</div>";
+        				
+        			}
+        			$(".main").html(html);
+        			
+        			if ( this.humanActive ) {
+        				$(".ball").click(function(){
+        					controller.humanFrom( +$(this).attr("data-row"), +$(this).attr("data-col") );
+        				});
+        				$(".needs").click(function(){
+        					controller.humanTo( +$(this).attr("data-row"), +$(this).attr("data-col") );        					
+        				});
+        			}
+        		}
+        		
+        		this.hasWon = function( player ) {
+        			var matches = 0;
+        			var goal = Settings.tokens.OPPONENTS[player];
+        			var me =  Settings.tokens.PLAYERS[player];
+        			for ( var i = 0; i < this.state.board.length; ++i ) {
+        				for ( var j = 0; j < this.state.board[i].length; ++j ) {
+        					if ( this.state.board[i][j] == me && this.state.original[i][j] == goal ) {
+        						++matches;
+        					}
+        				}
+        			}
+        			return matches == Settings.startNum;
+        		};
+        		
+        		this.curPlayer = function() {
+        			return this.state.playerList[this.state.cur_player];
+        		}
+        		
+        		this.end = function () {
+        			for ( var i = 0; i < this.state.playerList.length; ++i ) {
+        				if ( this.state.playerList[i].place == -1 ) {
+        					this.state.playerList[i].place = this.description.win_order.length;
+        					this.description.win_order.push( this.state.playerList[i].id );
+        				}
+        			}
+        			this.on = false;
+					this.run = function(){};
+					this.render();
+					setTimeout('alert( "Win order: ' + this.description.win_order.toString() + '" )', 1000);
+
+        		}
+        		
+        		this.celebrate = function () {
+        			this.curPlayer().place = this.description.win_order.length;
+        			this.description.win_order.push( this.curPlayer().id );
+        			
+        			if ( this.description.win_order.length == this.state.playerList.length ) {
+						this.end();
+        				
+        			}
+        		}
+        		
+        		this.playerToken = function() {
+        			return Settings.tokens.PLAYERS[ this.state.cur_player ];
+        		}
+        		
+        		this.getValidMoves = function() {
+        			var moves = this.state.board
+        					.getPlayerMoves ( this.playerToken() );
+					return moves;
+        		}
+        		
+        		this.performMove = function(move) {
+        			this.state.board.move( move[0], move[1], move[2], move[3] );
+        		}
+        		
+        		this.interpretBotOutput = function( output ) {
+        			var valid_moves = this.getValidMoves();
+        			var moveNum = parseInt( output );
+        			if ( isNaN(moveNum) || !valid_moves[moveNum] ) {
+        				return false;
+        			} else {
+        				this.performMove ( valid_moves[moveNum] );
+        				return true;
+        			}
+        		}
+        		
+        		this.constructBotProtocol = function() {
+        			var moves = this.getValidMoves();
+        			
+        			var moves_count = moves.length;
+        			var moves_str = moves
+        					.map(function(move){ return move.join(" "); })
+        					.join("\n");
+        			var board = this.state.board.toString();
+        			var original = this.state.original.toString();
+        			var ret = "PLAYER\n" + this.playerToken() + "\n";
+        			ret += "ORIGINAL\n" + original + "\n";
+        			ret += "BOARD\n" + board + "\n";
+        			ret += "MOVES " + moves_count + "\n" + moves_str + "\n";
+        			return ret;
+        			
+        		}
+        		
+        		this.curBotUrl = function() {
+  					var bot = $(".botChoice").eq(this.state.cur_player).find("select").val();
+  					return bots[bot];
+        		}
+        		
+        		this.advancePlayer = function() {
+        			do {
+        				this.state.cur_player = ( this.state.cur_player + 1 ) % this.state.playerList.length;
+        			} while ( this.curPlayer().place > -1 );
+        		}
+        		
+        		
+        		this.humanFromPoint = null;
+        		this.humanActive = false;
+        		this.passOffToHuman = function() {
+        			this.humanFromPoint = null;
+        			this.humanActive = true;
+        			this.render( );
+        		}
+        		
+        		this.humanFrom = function ( row, col ) {
+        			if ( this.state.board[row][col] != this.playerToken() ) return;
+        			this.humanFromPoint = [row, col];
+					this.render();
+        		}
+        		
+        		this.humanTo = function ( row, col ) {
+        			if ( !this.humanFromPoint ) return;
+        			var moves = this.getValidMoves();
+        			
+        			/*console.log(moves);
+        			console.log ([
+        				this.humanFromPoint[0],
+        				this.humanFromPoint[1],
+        				row, 
+        				col
+        			]);*/
+        			
+        			var matches = -1;
+        			for ( var i = 0; i < moves.length; ++i ) {
+        				if ( moves[i][0] == this.humanFromPoint[0] &&
+        					moves[i][1] == this.humanFromPoint[1] &&
+        					moves[i][2] == row &&
+        					moves[i][3] == col ) {
+        					matches = i;
+        					break;
+        				}
+        			}
+        			
+        			if ( matches == -1 ) return;
+        			
+        			this.performMove(moves[matches]);
+        			
+        			this.on = true;
+        			this.humanFromPoint = null;
+        			this.humanActive = false;
+
+					if ( _.hasWon( _.state.cur_player ) ) {
+						_.celebrate();
+					}
+					if ( _.description.win_order.length < _.state.playerList.length ) {
+						_.advancePlayer();
+					}
+
+        			this.render();
+        			this.run();
+        		}
+        		
+        		
+        		this.run = function() {
+ 
+         			if ( this.timer ) clearTimeout( this.timer );       			
+        			if ( this.curBotUrl() == Settings.isHuman ) {
+        				this.on = false;
+        				this.passOffToHuman();
+        				return;
+        			}
+        			if ( !this.on ) {
+        				this.timer = setTimeout( _.run, Settings.waitBetweenTurns );
+        				return;
+        			}
+        			var has_move = !!this.getValidMoves().length;
+        			if ( !has_move || this.curPlayer().place > -1 ) {
+        				_.advancePlayer();
+         				this.timer = setTimeout( _.run, Settings.waitBetweenTurns );
+         				return;
+       				}
+       				if ( this.description.states.length > 1000 ) {
+       					_.end();
+       				}	
+       				
+       				this.description.states.push( this.state.board.toString() );
+        			var bot_url = this.curBotUrl();
+        			var info = this.constructBotProtocol();
+					$.post(bot_url, info, function(result) {
+						if ( _.interpretBotOutput( result ) ) {
+							if ( _.hasWon( _.state.cur_player ) ) {
+								_.celebrate();
+							}
+							if ( _.description.win_order.length < _.state.playerList.length ) {
+								_.advancePlayer();
+							}
+						}
+						_.render();
+						this.timer = setTimeout( _.run.bind(_), Settings.waitBetweenTurns );
+					});
+        		};
+        		
+        		this.init = function() {
+        			this.render();
+        			this.on = false;
+        		}
+        	
+        	}
+        	
+        	function setupSettings() {
+        	    var colors = Settings.tokens.PLAYERS;
+        	    for (var i = 0; i < colors.length; i ++) {
+        	        botText = "<div class='botChoice'>";
+        	        botText += "<input checked type='checkbox' data-bot='"+i+"' class='active' >";
+        	        botText += "<span>Bot " + i + " (" + colors[i] + ")</span><select>";
+        	        for (var bot in bots) {
+        	            botText += "<option value='" + bot + "'>" + bot + "</option>";
+        	        }
+        	        botText += "</select></div>";
+        	        $("#BotChoices").append(botText);
+        	    }
+        	    $("select").selectmenu();
+        	    $("button").button();
+        	}
+        	
+        	$("document").ready(function(){
+        	    $.get("botList.json", {}, function(data) {
+        	        bots = data;
+        	        setupSettings();
+        	        $(document).on("selectmenuchange", "#speed", function(){
+            			Settings.waitBetweenTurns = parseInt(this.value);
+            		});
+            		$("#onoff").click(function(){
+            			controller.on = !controller.on;
+            			controller.run();
+            		});
+            		$(".active").click(function(){
+            			if ( controller.on || controller.humanActive ) return;
+            			var num = $(this).attr("data-bot");
+            			switch ( $(this).is(":checked") ) {
+            				case false:
+            					controller.state.playerList[num].place = controller.description.win_order.length;
+            					$(this).closest(".botChoice").addClass("dim");
+            				break;
+            				case true:
+            					controller.state.playerList[num].place = -1;
+            					$(this).closest(".botChoice").removeClass("dim");
+            				break;
+            				default:
+            				break;
+            			}
+            			
+            			controller.description.win_order = [];
+            			
+            			for ( var i  = 0; i  < controller.state.playerList.length; ++i ) {
+            				if ( controller.state.playerList[i].place > - 1) controller.description.win_order.push(
+            					controller.state.playerList[i].place
+            				);
+            			}
+            			
+            			controller.description.win_order.sort(function(a,b){
+            				return controller.state.playerList[a].place < 
+            					controller.state.playerList[b].place ? -1 : 1;
+            			});
+            		});
+            		window.controller = new Controller();
+            		window.controller.init();
+        	    });
+        	});
+        
+        </script>
+    </head>
+    <body>
+        <div class="main">
+        </div>
+        <div class="triangle-1"></div>
+        <div class="triangle-2"></div>
+        <div id="controls">
+            <div id="BotChoices"></div>
+            <div>
+            	<select id="speed">
+            	    <option value="3000">Slow speed</option>
+            	    <option value="1000" selected>Normal speed</option>
+            	    <option value="0">Fast speed</option>
+            	</select>
+        	</div>
+        	<button id="onoff" >Turn on/off</button>
+        </div>
+    </body>
+</html>
